@@ -47,17 +47,20 @@ class rsResetClass(OpenMayaMPx.MPxCommand):
                     if cmds.objExists(o_resetVal):
                         b_rvExist = True
                         d_defValues = eval(cmds.getAttr("%s.Reset_Values" % (o_objeto)))
-                    for element in atributos:
-                        ValorDefecto = cmds.attributeQuery(element, node=o_objeto, ld=True)[0]
-                        cadenaAttr = o_objeto + "." + element
-                        b_lock = cmds.getAttr(cadenaAttr, lock=True)
-                        valor = cmds.getAttr(cadenaAttr)
-                        if b_rvExist == True:
-                            if element in d_defValues:
-                                ValorDefecto = d_defValues[element]
-                        if b_lock == 0:
-                            if ValorDefecto != valor:
-                                cmds.setAttr(cadenaAttr, ValorDefecto)
+                    if atributos:
+                        for element in atributos:
+                            ValorDefecto = cmds.attributeQuery(element, node=o_objeto, ld=True)[0]
+                            cadenaAttr = o_objeto + "." + element
+                            b_lock = cmds.getAttr(cadenaAttr, lock=True)
+                            valor = cmds.getAttr(cadenaAttr)
+                            if b_rvExist == True:
+                                if element in d_defValues:
+                                    ValorDefecto = d_defValues[element]
+                            if b_lock == 0:
+                                if ValorDefecto != valor:
+                                    cmds.setAttr(cadenaAttr, ValorDefecto)
+                    else:
+                        cmds.warning("%s > Do not have keyable and displayable attributes" % (o_objeto))
 
 
 ##
@@ -98,22 +101,25 @@ class rsSetResetClass(OpenMayaMPx.MPxCommand):
                         cmds.setAttr(o_resetVal, lock=False)
                         cmds.deleteAttr(o_resetVal)
                     l_attributes = cmds.listAttr(o_obj, k=True)
-                    for o_attr in l_attributes:
-                        f_defVal = cmds.attributeQuery(o_attr, node=o_obj, ld=True)
-                        f_val = cmds.getAttr("%s.%s" % (o_obj, o_attr))
-                        if f_defVal != None and f_defVal[0] != f_val:
-                            if s_dict == "":
-                                s_dict = "{"
-                            s_temp = "\"%s\":%s}" % (o_attr, str(f_val))
-                            if s_dict == "{":
-                                s_dict = s_dict + s_temp
-                            else:
-                                s_dict = s_dict.replace("}", " ,%s" % (s_temp))
-                    if s_dict != "":
-                        cmds.select(o_obj)
-                        cmds.addAttr(dt="string", shortName="rv", longName="Reset_Values")
-                        cmds.setAttr(o_resetVal, s_dict, type="string")
-                        cmds.setAttr(o_resetVal, lock=True)
+                    if l_attributes:
+                        for o_attr in l_attributes:
+                            f_defVal = cmds.attributeQuery(o_attr, node=o_obj, ld=True)
+                            f_val = cmds.getAttr("%s.%s" % (o_obj, o_attr))
+                            if f_defVal != None and f_defVal[0] != f_val:
+                                if s_dict == "":
+                                    s_dict = "{"
+                                s_temp = "\"%s\":%s}" % (o_attr, str(f_val))
+                                if s_dict == "{":
+                                    s_dict = s_dict + s_temp
+                                else:
+                                    s_dict = s_dict.replace("}", " ,%s" % (s_temp))
+                        if s_dict != "":
+                            cmds.select(o_obj)
+                            cmds.addAttr(dt="string", shortName="rv", longName="Reset_Values")
+                            cmds.setAttr(o_resetVal, s_dict, type="string")
+                            cmds.setAttr(o_resetVal, lock=True)
+                    else:
+                        cmds.warning("%s > Do not have keyable and displayable attributes" % (o_obj))
                 cmds.select(l_sele)
 
 
@@ -158,7 +164,7 @@ def syntaxCreatorSet():
 # @param obj.
 # @return none
 def initializePlugin(obj):
-    plugin = OpenMayaMPx.MFnPlugin(obj, 'Rig Studio - Developer: Roberto Rubio', '1.0', 'Any')
+    plugin = OpenMayaMPx.MFnPlugin(obj, 'Rig Studio - Developer: Roberto Rubio', '1.1', 'Any')
     try:
         plugin.registerCommand(kPluginCmdNameReset, creatorReset, syntaxCreatorReset)
         plugin.registerCommand(kPluginCmdNameSet, creatorSet, syntaxCreatorSet)
